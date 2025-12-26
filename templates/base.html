@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Boutique El Baraka ">
+    <title>🌙 El Baraka Shop - Boutique en ligne Mauritanie</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/" class="brand">
+            <span>🌙</span>
+            <span>El Baraka Shop</span>
+        </a>
+        <div class="user-info">
+            {% if session.get('user_id') %}
+                <span style="background: rgba(255, 255, 255, 0.15); padding: 8px 16px; border-radius: 20px; backdrop-filter: blur(10px);">
+                    👤 {{ session.get('username') }}
+                </span>
+                <a href="/logout">🚪 Déconnexion</a>
+            {% else %}
+                <a href="/login">🔐 Connexion</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>

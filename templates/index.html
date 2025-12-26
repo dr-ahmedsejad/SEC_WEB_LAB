@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="main-layout">
+
+    <div>
+        <!-- Barre de recherche améliorée -->
+        <div style="background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e6ed;">
+            <form action="/recherche" method="GET" style="display: flex; gap: 12px; position: relative;">
+                <input type="text" name="q" value="{{ search_term }}" placeholder="Rechercher un produit (ex: Thé, Bazin)..." style="flex: 1;">
+                <button type="submit" class="btn-primary" style="width: auto; padding: 14px 32px;">🔍 Rechercher</button>
+            </form>
+            <small style="color: #6c757d; display: block; margin-top: 8px; font-style: italic;">
+                💡 <strong>Astuce :</strong> Le développeur a oublié de sécuriser ce champ...
+            </small>
+        </div>
+
+        <!-- Grille de produits -->
+        <div class="products-grid">
+            {% if produits %}
+                {% for p in produits %}
+                <div class="card">
+                    <div>
+                        <div style="font-size: 3.5rem; text-align: center; margin-bottom: 15px; filter: grayscale(0.2); transition: all 0.3s ease;">
+                            📦
+                        </div>
+                        <h3>{{ p['nom'] }}</h3>
+                        <p style="color: #6c757d; font-size: 0.9rem; line-height: 1.5;">
+                            {{ p['description'] }}
+                        </p>
+                    </div>
+                    <div>
+                        <div class="price">{{ p['prix'] }} MRU</div>
+                        <a href="/produit/{{ p['id'] }}" class="btn-buy" style="display: block; text-align: center; text-decoration: none; color: white;">
+                            👁️ Voir Détails
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="grid-column: 1 / -1; text-align: center; padding: 60px 40px; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 2px dashed #e0e6ed;">
+                    <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">📭</div>
+                    <h3 style="color: var(--primary); font-size: 1.5rem; margin-bottom: 10px;">Aucun produit trouvé</h3>
+                    <p style="color: #6c757d;">Essayez une autre recherche ou parcourez notre catalogue complet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar Portefeuille -->
+    <aside>
+        <div class="wallet-card">
+            <h3 style="margin-top: 0; color: var(--primary); font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                <span>💰</span>
+                <span>Mon Portefeuille</span>
+            </h3>
+
+            <div style="font-size: 2.8rem; font-weight: 900; color: var(--primary); text-align: center; padding: 25px; background: linear-gradient(135deg, rgba(0, 107, 60, 0.05) 0%, rgba(255, 215, 0, 0.05) 100%); border-radius: 15px; margin-bottom: 20px; border: 2px dashed var(--gold);">
+                {{ session.get('solde_mru', 0) }} <span style="font-size: 1.2rem; color: #6c757d;">MRU</span>
+            </div>
+
+            <hr style="border: 0; border-top: 2px solid #e0e6ed; margin: 25px 0;">
+
+            <h4 style="color: var(--text); margin-bottom: 10px; font-size: 1.1rem; font-weight: 700;">
+                🎫 Recharger mon compte
+            </h4>
+            <p style="font-size: 0.9rem; color: #6c757d; margin-bottom: 15px;">
+                Entrez le code à 12 chiffres de votre carte prépayée.
+            </p>
+
+            <form action="/recharger" method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+                <input
+                    type="text"
+                    name="code_pin"
+                    placeholder="Entrez le code à 12 chiffres"
+                    maxlength="12"
+                    pattern="\d{12}"
+                    required
+                >
+                <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, var(--secondary) 0%, #a01518 100%); box-shadow: 0 4px 12px rgba(208, 28, 31, 0.3);">
+                    ✓ Valider le Code
+                </button>
+            </form>
+
+            <div style="margin-top: 20px; padding: 12px; background: #e7f3ff; border-radius: 8px; border-left: 3px solid #0066cc;">
+                <p style="margin: 0; font-size: 0.85rem; color: #004085;">
+                    <strong>💡 Info :</strong> Les codes de recharge sont disponibles chez nos partenaires agréés.
+                </p>
+            </div>
+        </div>
+    </aside>
+
+</div>
+{% endblock %}

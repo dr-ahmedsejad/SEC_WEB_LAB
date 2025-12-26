@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="max-width: 1200px; margin: 0 auto;">
+
+    <!-- Bouton Retour -->
+    <div style="margin-bottom: 20px;">
+        <a href="/" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: white; color: var(--primary); text-decoration: none; border-radius: 10px; border: 2px solid var(--primary); font-weight: 600; transition: all 0.3s ease;">
+            ← Retour aux produits
+        </a>
+    </div>
+
+    <div class="main-layout">
+
+        <!-- Détails du Produit -->
+        <div>
+            <div style="background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e6ed; margin-bottom: 30px;">
+                <div style="text-align: center; font-size: 6rem; margin-bottom: 20px;">📦</div>
+
+                <h1 style="color: var(--primary); margin-bottom: 15px; font-size: 2rem;">{{ produit.nom }}</h1>
+
+                <p style="color: #6c757d; font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px;">
+                    {{ produit.description }}
+                </p>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: linear-gradient(135deg, rgba(0, 107, 60, 0.05) 0%, rgba(255, 215, 0, 0.05) 100%); border-radius: 12px; border: 2px solid var(--primary);">
+                    <div>
+                        <div style="font-size: 0.9rem; color: #6c757d; margin-bottom: 5px;">Prix unitaire</div>
+                        <div style="font-size: 2.5rem; font-weight: 900; color: var(--primary);">
+                            {{ produit.prix }} <span style="font-size: 1.2rem;">MRU</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; color: #6c757d; margin-bottom: 5px;">Stock disponible</div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text);">
+                            {{ produit.quantite }} unités
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" style="width: 100%; margin-top: 20px; padding: 15px; font-size: 1.1rem;">
+                    🛒 Ajouter au Panier
+                </button>
+            </div>
+
+            <!-- Section Commentaires -->
+            <div style="background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e0e6ed;">
+                <h2 style="color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <span>💬</span>
+                    <span>Avis des Clients ({{ commentaires|length }})</span>
+                </h2>
+
+                <!-- Formulaire d'ajout de commentaire -->
+                <div style="background: white; padding: 30px; border-radius: 16px; margin-bottom: 30px; border: 2px solid var(--primary); box-shadow: 0 4px 16px rgba(0, 107, 60, 0.15);">
+                    <h3 style="margin-top: 0; margin-bottom: 25px; font-size: 1.3rem; color: var(--primary); display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #e9ecef; padding-bottom: 15px;">
+                        <span style="font-size: 1.8rem;">✍️</span>
+                        <span>Laisser un avis</span>
+                    </h3>
+
+                    <form action="/produit/{{ produit.id }}/commenter" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
+
+                        <!-- Champ Note -->
+                        <div>
+                            <label for="note" style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--text); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.3rem;">⭐</span>
+                                <span>Votre Note</span>
+                            </label>
+                            <select name="note" id="note" style="width: 100%; padding: 15px 18px; border: 2px solid #dee2e6; border-radius: 12px; font-size: 1.05rem; background: #f8f9fa; cursor: pointer; transition: all 0.3s ease; font-weight: 600; color: var(--text);">
+                                <option value="5">⭐⭐⭐⭐⭐ Excellent (5/5)</option>
+                                <option value="4">⭐⭐⭐⭐ Très bien (4/5)</option>
+                                <option value="3">⭐⭐⭐ Bien (3/5)</option>
+                                <option value="2">⭐⭐ Moyen (2/5)</option>
+                                <option value="1">⭐ Mauvais (1/5)</option>
+                            </select>
+                        </div>
+
+                        <!-- Champ Commentaire -->
+                        <div>
+                            <label for="message" style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--text); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.3rem;">💭</span>
+                                <span>Votre Commentaire</span>
+                            </label>
+                            <textarea
+                                name="message"
+                                id="message"
+                                rows="5"
+                                placeholder="Partagez votre expérience avec ce produit..."
+                                style="width: 100%; padding: 15px 18px; border: 2px solid #dee2e6; border-radius: 12px; font-size: 1rem; font-family: inherit; resize: vertical; transition: all 0.3s ease; background: #f8f9fa; line-height: 1.6;"
+                                required
+                            ></textarea>
+                        </div>
+
+                        <!-- Indice TP -->
+                        <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); padding: 18px 22px; border-radius: 12px; border: 2px solid #ffc107; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.25);">
+                            <div style="display: flex; align-items: start; gap: 12px;">
+                                <span style="font-size: 1.8rem; line-height: 1;">⚠️</span>
+                                <div>
+                                    <p style="margin: 0; font-size: 0.95rem; color: #856404; line-height: 1.6;">
+                                        <strong style="font-size: 1.05rem; display: block; margin-bottom: 5px;">Indice TP :</strong>
+                                        Ce champ n'est pas protégé contre les scripts... Essayez d'injecter du code JavaScript !
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bouton Submit -->
+                        <button type="submit" class="btn-primary" style="padding: 18px; font-size: 1.15rem; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; box-shadow: 0 4px 12px rgba(0, 107, 60, 0.3);">
+                            <span style="font-size: 1.4rem;">📤</span>
+                            <span style="font-weight: 700;">Publier mon avis</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Liste des commentaires -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    {% if commentaires %}
+                        {% for c in commentaires %}
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #28a745;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                <div>
+                                    <strong style="color: var(--primary); font-size: 1.1rem;">👤 {{ c.username }}</strong>
+                                    <div style="color: var(--gold); font-size: 1.2rem; margin-top: 5px;">
+                                        {{ '⭐' * (c.note|int) }}
+                                        <span style="color: #6c757d; font-size: 0.9rem; margin-left: 10px;">({{ c.note }}/5)</span>
+                                    </div>
+                                </div>
+                                <span style="color: #6c757d; font-size: 0.85rem;">
+                                    📅 {{ c.date_post[:10] }}
+                                </span>
+                            </div>
+
+                            <div style="color: var(--text); line-height: 1.6; margin-top: 12px;">
+                                {{ c.message | safe }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                            <div style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;">💬</div>
+                            <p style="font-size: 1.1rem; margin: 0;">Aucun avis pour le moment.</p>
+                            <p style="font-size: 0.9rem; margin-top: 5px;">Soyez le premier à donner votre avis !</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <aside>
+            <div class="wallet-card">
+                <h3 style="margin-top: 0; color: var(--primary); font-size: 1.2rem; font-weight: 800;">
+                    📊 Informations
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="padding: 15px; background: #e7f3ff; border-radius: 10px; border-left: 3px solid #0066cc;">
+                        <div style="font-size: 0.85rem; color: #004085; margin-bottom: 5px;">✅ Disponibilité</div>
+                        <div style="font-weight: 700; color: var(--text);">En stock</div>
+                    </div>
+
+                    <div style="padding: 15px; background: #d4edda; border-radius: 10px; border-left: 3px solid #28a745;">
+                        <div style="font-size: 0.85rem; color: #155724; margin-bottom: 5px;">🚚 Livraison</div>
+                        <div style="font-weight: 700; color: var(--text);">2-3 jours ouvrés</div>
+                    </div>
+
+                    <div style="padding: 15px; background: #fff3cd; border-radius: 10px; border-left: 3px solid var(--gold);">
+                        <div style="font-size: 0.85rem; color: #856404; margin-bottom: 5px;">🔄 Retours</div>
+                        <div style="font-weight: 700; color: var(--text);">14 jours</div>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 2px solid #e0e6ed; margin: 20px 0;">
+
+                <div style="background: #f8d7da; padding: 15px; border-radius: 10px; border-left: 3px solid #dc3545;">
+                    <h4 style="margin: 0 0 10px 0; color: #721c24; font-size: 1rem;">
+                        🔓 Vulnérabilité XSS
+                    </h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: #721c24; line-height: 1.5;">
+                        Les commentaires affichent du HTML non échappé. Testez avec : <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code>
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+</div>
+
+{% endblock %}

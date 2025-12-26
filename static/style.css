@@ -1,0 +1,595 @@
+/* static/style.css */
+:root {
+    --primary: #006b3c;
+    --primary-dark: #004d2a;
+    --secondary: #d01c1f;
+    --gold: #ffd700;
+    --bg: #f8f9fa;
+    --text: #2c3e50;
+    --white: #ffffff;
+    --shadow: rgba(0, 0, 0, 0.08);
+    --shadow-hover: rgba(0, 0, 0, 0.15);
+    --border: #e0e6ed;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Navbar Améliorée */
+.navbar {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--white);
+    padding: 1.2rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 107, 60, 0.3);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.navbar .brand {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--gold);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.3s ease;
+}
+
+.navbar .brand:hover {
+    transform: scale(1.05);
+}
+
+.navbar .user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 0.95rem;
+}
+
+.navbar .user-info span {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 8px 16px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.navbar a {
+    color: var(--white);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.navbar a:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Containers */
+.container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* Layout Grid */
+.main-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .main-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Barre de recherche améliorée */
+.main-layout > div > div:first-child {
+    background: var(--white);
+    padding: 25px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.main-layout form {
+    display: flex;
+    gap: 12px;
+    position: relative;
+}
+
+.main-layout form::before {
+    content: "🔍";
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.main-layout input[type="text"] {
+    flex: 1;
+    padding: 14px 20px 14px 45px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.main-layout input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(0, 107, 60, 0.1);
+}
+
+.main-layout form button {
+    padding: 14px 32px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 107, 60, 0.3);
+}
+
+.main-layout form button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 107, 60, 0.4);
+}
+
+.main-layout form button:active {
+    transform: translateY(0);
+}
+
+.main-layout small {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    display: block;
+    font-style: italic;
+}
+
+/* Grille de produits */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.card {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px var(--shadow);
+    padding: 20px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--gold));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.card:hover::before {
+    transform: scaleX(1);
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px var(--shadow-hover);
+}
+
+.card > div:first-child {
+    margin-bottom: 15px;
+}
+
+.card > div:first-child > div:first-child {
+    font-size: 3.5rem;
+    text-align: center;
+    margin-bottom: 15px;
+    filter: grayscale(0.2);
+    transition: all 0.3s ease;
+}
+
+.card:hover > div:first-child > div:first-child {
+    transform: scale(1.1) rotate(5deg);
+    filter: grayscale(0);
+}
+
+.card h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.2rem;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.card p {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.card .price {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 15px 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.card .price::before {
+    content: "💰";
+    font-size: 1.2rem;
+}
+
+.btn-buy {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 107, 60, 0.2);
+}
+
+.btn-buy:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 107, 60, 0.3);
+}
+
+.btn-buy:active {
+    transform: translateY(0);
+}
+
+/* Login Container Amélioré */
+.login-container {
+    max-width: 420px;
+    margin: 2rem auto;
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    text-align: center;
+    border: 1px solid var(--border);
+}
+
+.login-container h2 {
+    margin-bottom: 10px;
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.login-container > p {
+    margin-bottom: 2rem;
+    color: #6c757d;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.95rem;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(0, 107, 60, 0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1.05rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 107, 60, 0.3);
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 107, 60, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.login-container > div:last-child {
+    margin-top: 25px;
+    padding: 15px;
+    background: #fff3cd;
+    border-radius: 10px;
+    border-left: 4px solid var(--gold);
+}
+
+.login-container > div:last-child p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #856404;
+}
+
+/* Sidebar Portefeuille Amélioré */
+.wallet-card {
+    background: linear-gradient(135deg, var(--white) 0%, #f8f9fa 100%);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px var(--shadow);
+    position: sticky;
+    top: 100px;
+    border: 1px solid var(--border);
+}
+
+.wallet-card h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--primary);
+    font-size: 1.4rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wallet-card > div:nth-child(2) {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: var(--primary);
+    text-align: center;
+    padding: 25px;
+    background: linear-gradient(135deg, rgba(0, 107, 60, 0.05) 0%, rgba(255, 215, 0, 0.05) 100%);
+    border-radius: 15px;
+    margin-bottom: 20px;
+    border: 2px dashed var(--gold);
+}
+
+.wallet-card > div:nth-child(2) span {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.wallet-card hr {
+    border: 0;
+    border-top: 2px solid var(--border);
+    margin: 25px 0;
+}
+
+.wallet-card h4 {
+    color: var(--text);
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.wallet-card p {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+.wallet-card form input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-size: 1rem;
+    text-align: center;
+    letter-spacing: 2px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.wallet-card form input:focus {
+    outline: none;
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 4px rgba(208, 28, 31, 0.1);
+}
+
+.wallet-card form button {
+    background: linear-gradient(135deg, var(--secondary) 0%, #a01518 100%);
+    box-shadow: 0 4px 12px rgba(208, 28, 31, 0.3);
+}
+
+.wallet-card form button:hover {
+    box-shadow: 0 6px 20px rgba(208, 28, 31, 0.4);
+}
+
+/* Alerts Améliorées */
+.alert {
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideInDown 0.4s ease;
+    border-left: 4px solid;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border-color: #28a745;
+}
+
+.alert-success::before {
+    content: "✓";
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border-color: #dc3545;
+}
+
+.alert-danger::before {
+    content: "⚠";
+    font-size: 1.5rem;
+}
+
+/* Message "Aucun produit" */
+.products-grid > div[style*="grid-column"] {
+    background: var(--white);
+    padding: 60px 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px var(--shadow);
+    border: 2px dashed var(--border);
+}
+
+.products-grid > div[style*="grid-column"] h3 {
+    color: var(--primary);
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 1rem;
+    }
+
+    .navbar .user-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .login-container {
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .wallet-card {
+        position: static;
+    }
+}
+
+/* Animations subtiles */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeIn 0.5s ease backwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.05s; }
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.15s; }
+.card:nth-child(4) { animation-delay: 0.2s; }
+.card:nth-child(5) { animation-delay: 0.25s; }
+
+/* Styles pour les formulaires de commentaires */
+select:focus,
+textarea:focus {
+    outline: none !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(0, 107, 60, 0.1) !important;
+}
+
+select:hover,
+textarea:hover {
+    border-color: var(--primary) !important;
+}
+
+/* Media query pour mobile */
+@media (max-width: 768px) {
+    form > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+}
