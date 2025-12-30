@@ -120,7 +120,8 @@ body {
     position: relative;
 }
 
-.main-layout form::before {
+/* Loupe UNIQUEMENT pour le formulaire de recherche */
+.search-form::before {
     content: "🔍";
     position: absolute;
     left: 15px;
@@ -129,6 +130,10 @@ body {
     font-size: 1.2rem;
     pointer-events: none;
     z-index: 1;
+}
+
+.search-form {
+    position: relative;
 }
 
 .main-layout input[type="text"] {
