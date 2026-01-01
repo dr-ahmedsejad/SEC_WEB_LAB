@@ -357,7 +357,8 @@ def voir_commande(id_commande):
         # On passe toujours une liste pour garder la compatibilité avec le template
         return render_template('commande.html', commande=commande, titre=f"Détail Commande #{id_commande}")
     else:
-        return "❌ Commande introuvable."
+        flash("Commande introuvable.", "danger")
+        return redirect('/')
 
 @app.route('/mes-commandes')
 def mes_commandes():
@@ -378,7 +379,8 @@ def mes_commandes():
     if commandes:
         return render_template('commandes.html', commandes=commandes)
     else:
-        return "❌ Commande introuvable."
+        flash("Commande introuvable.", "danger")
+        return redirect('/')
 
 
 
