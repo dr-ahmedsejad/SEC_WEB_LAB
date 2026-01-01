@@ -1,6 +1,6 @@
 # Fichier : hacker_server.py
 # Ce script simule le serveur du pirate qui écoute sur le port 8000
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, render_template
 from datetime import datetime
 
 app = Flask(__name__)
@@ -39,6 +39,12 @@ def phishing():
 
     # 4. On redirige la victime vers la vraie page de connexion pour faire "genre c'était un bug"
     return redirect("http://localhost:5000/login")
+
+#CSRF EXPLOIT
+@app.route('/promo_ramadan')
+def promo():
+    return render_template('csrf_exploit.html')
+
 
 if __name__ == '__main__':
     print("💀 Serveur Pirate en écoute sur le port 8000...")
