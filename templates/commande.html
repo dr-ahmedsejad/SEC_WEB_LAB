@@ -6,7 +6,7 @@
     <div style="background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e6ed;">
         <div>
             <h2 style="margin: 0; color: var(--primary); font-size: 2rem; font-weight: 800;">
-                📦 Mes Commandes
+                {{ titre }}
             </h2>
             <p style="margin: 5px 0 0 0; color: #6c757d;">Historique de vos achats et factures</p>
         </div>
@@ -20,6 +20,7 @@
             <thead>
                 <tr style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white;">
                     <th style="padding: 15px; text-align: left; font-weight: 700; border-radius: 8px 0 0 8px;">N° Facture</th>
+                    <th style="padding: 15px; text-align: left; font-weight: 700;">Client (Victime)</th>
                     <th style="padding: 15px; text-align: left; font-weight: 700;">Produit</th>
                     <th style="padding: 15px; text-align: left; font-weight: 700;">Date</th>
                     <th style="padding: 15px; text-align: left; font-weight: 700;">Adresse de Livraison</th>
@@ -27,16 +28,28 @@
                 </tr>
             </thead>
             <tbody>
+
                 <tr style="border-bottom: 1px solid #e0e6ed; transition: background 0.3s ease;"
                     onmouseover="this.style.background='#f8f9fa'"
                     onmouseout="this.style.background='white'">
 
-                    <td style="padding: 15px; font-weight: 700; color: var(--primary);">
-                        #{{ commande.id }}
+                    <td style="padding: 15px; font-weight: 700;">
+                        <a href="/commande/{{ commande.id }}" style="color: var(--primary); text-decoration: underline; font-size: 1.1rem;">
+                            #{{ commande.id }}
+                        </a>
                     </td>
 
                     <td style="padding: 15px;">
-                        <strong style="color: #333;">{{ commande.nom_produit or c.produit }}</strong>
+                        {% if commande.nom_client %}
+                            <div style="font-weight: 800; color: #d9534f;">👤 {{ commande.nom_client }}</div>
+                            <div style="font-size: 0.85rem; color: #6c757d;">📞 {{ commande.tel_client }}</div>
+                        {% else %}
+                            <span style="color: #999;">Moi</span>
+                        {% endif %}
+                    </td>
+
+                    <td style="padding: 15px;">
+                        <strong style="color: #333;">{{ commande.nom_produit }}</strong>
                         <div style="font-size: 0.8rem; color: #6c757d;">{{ commande.description }}</div>
                     </td>
 

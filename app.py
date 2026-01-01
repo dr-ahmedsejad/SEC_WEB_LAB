@@ -314,26 +314,73 @@ def acheter_produit(produit_id):
 #     else:
 #         return "❌ Commande introuvable."
 
+# @app.route('/commande/<int:id_commande>')
+# def voir_commande(id_commande):
+#     if 'user_id' not in session: return redirect('/login')
+#     conn = get_db_connection()
+#     query = """
+#         SELECT c.*, p.nom as nom_produit, p.description
+#         FROM commandes c
+#         JOIN produits p ON c.produit_id = p.id
+#         WHERE c.id = ?
+#     """
+#     commande = conn.execute(query, (id_commande,)).fetchone()
+#     conn.close()
+#
+#     if commande:
+#         return render_template('commandes.html', commande=commande)
+#     else:
+#         return "❌ Commande introuvable."
+
 @app.route('/commande/<int:id_commande>')
 def voir_commande(id_commande):
     if 'user_id' not in session: return redirect('/login')
 
     conn = get_db_connection()
 
-    # Requete avec JOIN pour avoir le nom du produit
     query = """
-        SELECT c.*, p.nom as nom_produit, p.description 
+        SELECT c.*, 
+               p.nom as nom_produit, 
+               p.description,
+               u.username as nom_client,
+               u.telephone as tel_client
         FROM commandes c
         JOIN produits p ON c.produit_id = p.id
+        JOIN utilisateurs u ON c.utilisateur_id = u.id
         WHERE c.id = ?
     """
+
     commande = conn.execute(query, (id_commande,)).fetchone()
     conn.close()
 
     if commande:
-        return render_template('commande.html', commande=commande)
+        # On passe toujours une liste pour garder la compatibilité avec le template
+        return render_template('commande.html', commande=commande, titre=f"Détail Commande #{id_commande}")
     else:
         return "❌ Commande introuvable."
+
+@app.route('/mes-commandes')
+def mes_commandes():
+    if 'user_id' not in session: return redirect('/login')
+    user_id = session['user_id']
+    conn = get_db_connection()
+
+    query = """
+        SELECT c.*, p.nom as nom_produit, p.description 
+        FROM commandes c
+        JOIN produits p ON c.produit_id = p.id 
+        JOIN utilisateurs u ON c.utilisateur_id = u.id
+        WHERE c.utilisateur_id = ?
+    """
+    commandes = conn.execute(query,(user_id,)).fetchall()
+    conn.close()
+
+    if commandes:
+        return render_template('commandes.html', commandes=commandes)
+    else:
+        return "❌ Commande introuvable."
+
+
 
 # ============================================
 # CRUD ADMIN - GESTION DES UTILISATEURS
