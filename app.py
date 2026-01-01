@@ -1,126 +1,3 @@
-# from flask import Flask, render_template, request, redirect, session, flash, url_for
-# import sqlite3
-#
-# app = Flask(__name__)
-# app.secret_key = 'mauritanie_ctf_secret_key'
-#
-#
-# def get_db_connection():
-#     conn = sqlite3.connect('elbaraka.db')
-#     conn.row_factory = sqlite3.Row
-#     return conn
-#
-#
-# # Route Accueil
-# @app.route('/')
-# def index():
-#     if 'user_id' not in session:
-#         return redirect('/login')
-#
-#     conn = get_db_connection()
-#
-#     # Mise à jour du solde affiché
-#     user = conn.execute("SELECT solde_mru FROM utilisateurs WHERE id = ?", (session['user_id'],)).fetchone()
-#     if user:
-#         session['solde_mru'] = user['solde_mru']
-#
-#     # Par défaut, on affiche quelques produits
-#     produits = conn.execute("SELECT * FROM produits LIMIT 10").fetchall()
-#     conn.close()
-#
-#     return render_template('index.html', produits=produits, search_term='')
-#
-#
-# # Route Login (Avec la faille SQL)
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if request.method == 'GET':
-#         return render_template('login.html')
-#
-#     username = request.form['username']
-#     password = request.form['password']
-#
-#     conn = get_db_connection()
-#
-#     # ❌ VULNÉRABILITÉ A05 : Concaténation directe
-#     # Payload: admin_baraka' --
-#     query = f"SELECT * FROM utilisateurs WHERE username = '{username}' AND password = '{password}'"
-#
-#     try:
-#         user = conn.execute(query).fetchone()
-#         conn.close()
-#
-#         if user:
-#             session['user_id'] = user['id']
-#             session['username'] = user['username']
-#             session['solde_mru'] = user['solde_mru']
-#             flash(f"Marhba {user['username']} !", "success")
-#             return redirect('/')
-#         else:
-#             flash("Identifiants incorrects.", "danger")
-#             return redirect('/login')
-#     except Exception as e:
-#         flash(f"Erreur SQL : {e}", "danger")  # Affiche l'erreur pour aider le hacker
-#         return redirect('/login')
-#
-#
-# # Route Recherche (Avec la faille UNION SQL)
-# @app.route('/recherche')
-# def recherche():
-#     if 'user_id' not in session: return redirect('/login')
-#
-#     q = request.args.get('q', '')
-#     conn = get_db_connection()
-#
-#     # ❌ VULNÉRABILITÉ A05 : UNION SELECT possible ici
-#     # La requête attend 5 colonnes : id, nom, description, prix, quantite
-#     sql = f"SELECT id, nom, description, prix, quantite FROM produits WHERE nom LIKE '%{q}%'"
-#
-#     try:
-#         produits = conn.execute(sql).fetchall()
-#     except Exception as e:
-#         produits = []
-#         flash(f"Erreur SQL: {e}", "danger")
-#
-#     conn.close()
-#     return render_template('index.html', produits=produits, search_term=q)
-#
-#
-# # Route Recharge (Fonctionnelle, pas vulnérable, sert à valider le vol)
-# @app.route('/recharger', methods=['POST'])
-# def recharger():
-#     if 'user_id' not in session: return redirect('/login')
-#
-#     code = request.form['code_pin']
-#     conn = get_db_connection()
-#
-#     # Vérification propre
-#     carte = conn.execute("SELECT * FROM cartes_recharge WHERE code_pin = ? AND statut = 'VALIDE'", (code,)).fetchone()
-#
-#     if carte:
-#         montant = carte['montant']
-#         # 1. Invalider la carte
-#         conn.execute("UPDATE cartes_recharge SET statut = 'UTILISE' WHERE id = ?", (carte['id'],))
-#         # 2. Donner l'argent
-#         conn.execute("UPDATE utilisateurs SET solde_mru = solde_mru + ? WHERE id = ?", (montant, session['user_id']))
-#         conn.commit()
-#         flash(f"Félicitations ! Votre compte a été crédité de {montant} MRU.", "success")
-#     else:
-#         flash("Code invalide ou déjà utilisé.", "danger")
-#
-#     conn.close()
-#     return redirect('/')
-#
-#
-# @app.route('/logout')
-# def logout():
-#     session.clear()
-#     return redirect('/login')
-#
-#
-# if __name__ == '__main__':
-#     app.run(debug=True, port=5000)
-
 from flask import Flask, render_template, request, redirect, session, flash, url_for
 import sqlite3
 from datetime import datetime
@@ -327,14 +204,6 @@ def logout():
 @app.route('/transfert', methods=['POST'])
 def transfert():
     if 'user_id' not in session: return redirect('/login')
-
-    # C. Vérification
-    token_recu = request.form.get('csrf_token')
-    token_attendu = session.get('csrf_token')
-    if not token_recu or token_recu != token_attendu:
-        print(f"🛑 TENTATIVE BLOQUÉE ! Token reçu: {token_recu} vs Attendu: {token_attendu}")
-        return "⛔ ERREUR : CSRF détecté (Jeton invalide).",403
-
     destinataire = request.form['destinataire']
     montant = int(request.form['montant'])
     sender_id = session['user_id']
@@ -363,8 +232,108 @@ def transfert():
     return redirect('/')
 
 
+@app.route('/acheter/<int:produit_id>', methods=['POST'])
+def acheter_produit(produit_id):
+    if 'user_id' not in session: return redirect('/login')
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+
+    try:
+        # 1. Récupérer les infos du produit et de l'utilisateur
+        produit = conn.execute("SELECT * FROM produits WHERE id = ?", (produit_id,)).fetchone()
+        user = conn.execute("SELECT * FROM utilisateurs WHERE id = ?", (user_id,)).fetchone()
+
+        # 2. Vérifications de base
+        if not produit:
+            flash("Produit introuvable.", "danger")
+            return redirect('/')
+
+        if produit['quantite'] <= 0:
+            flash("Stock épuisé !", "warning")
+            return redirect('/')
+
+        if user['solde_mru'] < produit['prix']:
+            flash("Solde insuffisant pour cet achat.", "danger")
+            return redirect('/')
+
+        # 3. TRANSACTION D'ACHAT
+        # A. Débiter l'utilisateur
+        conn.execute("UPDATE utilisateurs SET solde_mru = solde_mru - ? WHERE id = ?", (produit['prix'], user_id))
+
+        # B. Baisser le stock
+        conn.execute("UPDATE produits SET quantite = quantite - 1 WHERE id = ?", (produit_id,))
+
+        # C. Créer la commande (Facture)
+        cur = conn.execute("""
+            INSERT INTO commandes (utilisateur_id, produit_id, montant, adresse_livraison)
+            VALUES (?, ?, ?, ?)
+        """, (user_id, produit_id, produit['prix'], user['adresse']))
+
+        # On récupère l'ID de la commande qu'on vient de créer (ex: 3)
+        id_nouvelle_facture = cur.lastrowid
+
+        conn.commit()
+
+        flash("✅ Achat effectué avec succès !", "success")
+
+        # 4. REDIRECTION VERS LA FACTURE (Le piège pour l'IDOR)
+        # On envoie l'utilisateur directement sur SA facture
+        return redirect(f'/commande/{id_nouvelle_facture}')
+
+    except Exception as e:
+        conn.rollback()
+        flash(f"Erreur lors de l'achat : {e}", "danger")
+        return redirect('/')
+    finally:
+        conn.close()
 
 
+# @app.route('/commande/<int:id_commande>')
+# def voir_commande(id_commande):
+#     if 'user_id' not in session:
+#         return redirect('/login')
+#
+#     conn = get_db_connection()
+#
+#     # ❌ CODE VULNÉRABLE A01 : IDOR
+#     # On fait une jointure pour récupérer le nom du produit associé à l'ID stocké dans la commande
+#     # Mais on ne vérifie TOUJOURS PAS à qui appartient la commande !
+#     query = """
+#         SELECT c.*, p.nom as nom_produit, p.description
+#         FROM commandes c
+#         JOIN produits p ON c.produit_id = p.id
+#         WHERE c.id = ?
+#     """
+#     commande = conn.execute(query, (id_commande,)).fetchone()
+#
+#     conn.close()
+#
+#     if commande:
+#         return render_template('commande.html', c=commande)
+#     else:
+#         return "❌ Commande introuvable."
+
+@app.route('/commande/<int:id_commande>')
+def voir_commande(id_commande):
+    if 'user_id' not in session: return redirect('/login')
+
+    conn = get_db_connection()
+
+    # Requete avec JOIN pour avoir le nom du produit
+    query = """
+        SELECT c.*, p.nom as nom_produit, p.description 
+        FROM commandes c
+        JOIN produits p ON c.produit_id = p.id
+        WHERE c.id = ?
+    """
+    commande = conn.execute(query, (id_commande,)).fetchone()
+    conn.close()
+
+    if commande:
+        return render_template('commande.html', commande=commande)
+    else:
+        return "❌ Commande introuvable."
 
 # ============================================
 # CRUD ADMIN - GESTION DES UTILISATEURS

@@ -41,16 +41,26 @@ def init_db():
         );
         
         CREATE TABLE commentaires (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    produit_id INT,
-    utilisateur_id INT,
-    message TEXT,                          -- L'étudiant injecte <script> ici
-    note INT CHECK (note BETWEEN 1 AND 5),
-    date_post DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (produit_id) REFERENCES produits(id),
-    FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id)
-);
-
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        produit_id INT,
+        utilisateur_id INT,
+        message TEXT,                          
+        note INT CHECK (note BETWEEN 1 AND 5),
+        date_post DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (produit_id) REFERENCES produits(id),
+        FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id)
+        );
+        
+        CREATE TABLE commandes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            utilisateur_id INTEGER,
+            produit_id INTEGER,  -- On stocke l'ID, pas le texte
+            montant DECIMAL(10, 2),
+            date_commande DATETIME DEFAULT CURRENT_TIMESTAMP,
+            adresse_livraison TEXT,
+            FOREIGN KEY(utilisateur_id) REFERENCES utilisateurs(id),
+            FOREIGN KEY(produit_id) REFERENCES produits(id) 
+        );
         -- Table Cartes de Recharge (Le Trésor caché)
         CREATE TABLE cartes_recharge (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

