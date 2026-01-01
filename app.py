@@ -180,6 +180,7 @@ def login():
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['solde_mru'] = user['solde_mru']
+            session['est_admin'] = user['est_admin']
             flash(f"Marhba {user['username']} !", "success")
             return redirect('/')
         else:
@@ -301,6 +302,163 @@ def logout():
     session.clear()
     return redirect('/login')
 
+@app.route('/admin/delete', methods=['POST'])
+def delete_user():
+    # Le serveur vérifie le cookie, mais pas l'origine de la demande
+    conn = get_db_connection()
+    conn.execute("DELETE FROM utilisateurs WHERE id = ?", (request.form['id'],))
+    conn.commit()
+    return "Supprimé"
+
+
+
+# ============================================
+# CRUD ADMIN - GESTION DES UTILISATEURS
+# ============================================
+
+@app.route('/admin/users')
+def admin_users():
+    """Afficher la liste de tous les utilisateurs"""
+    if 'user_id' not in session: return redirect('/login')
+    conn = get_db_connection()
+    users = conn.execute("SELECT * FROM utilisateurs ORDER BY id ASC").fetchall()
+    conn.close()
+
+    return render_template('admin_users.html', users=users)
+
+
+@app.route('/admin/users/add', methods=['POST'])
+def admin_add_user():
+    """Ajouter un nouvel utilisateur"""
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    telephone = request.form.get('telephone', '').strip()
+    adresse = request.form.get('adresse', '').strip()
+    solde_mru = request.form.get('solde_mru', '0.00')
+    est_admin = 1 if request.form.get('est_admin') else 0
+
+    # Validation
+    if not username or not password:
+        flash("Le nom d'utilisateur et le mot de passe sont obligatoires.", "danger")
+        return redirect('/admin/users')
+
+    if len(password) < 6:
+        flash("Le mot de passe doit contenir au moins 6 caractères.", "danger")
+        return redirect('/admin/users')
+
+    conn = get_db_connection()
+
+    # Vérifier si le username existe déjà
+    existing = conn.execute("SELECT id FROM utilisateurs WHERE username = ?", (username,)).fetchone()
+    if existing:
+        conn.close()
+        flash(f"L'utilisateur '{username}' existe déjà.", "danger")
+        return redirect('/admin/users')
+
+    try:
+        # Insérer le nouvel utilisateur
+        conn.execute("""
+            INSERT INTO utilisateurs (username, password, telephone, adresse, solde_mru, est_admin)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (username, password, telephone, adresse, float(solde_mru), est_admin))
+
+        conn.commit()
+        flash(f"✅ Utilisateur '{username}' créé avec succès !", "success")
+    except Exception as e:
+        flash(f"Erreur lors de la création : {e}", "danger")
+    finally:
+        conn.close()
+
+    return redirect('/admin/users')
+
+
+@app.route('/admin/users/edit', methods=['POST'])
+def admin_edit_user():
+    """Modifier un utilisateur existant"""
+    user_id = request.form.get('user_id')
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    telephone = request.form.get('telephone', '').strip()
+    adresse = request.form.get('adresse', '').strip()
+    solde_mru = request.form.get('solde_mru', '0.00')
+    est_admin = 1 if request.form.get('est_admin') else 0
+
+    if not user_id or not username:
+        flash("Données invalides.", "danger")
+        return redirect('/admin/users')
+
+    conn = get_db_connection()
+
+    # Vérifier si le username existe déjà pour un autre utilisateur
+    existing = conn.execute(
+        "SELECT id FROM utilisateurs WHERE username = ? AND id != ?",
+        (username, user_id)
+    ).fetchone()
+
+    if existing:
+        conn.close()
+        flash(f"Le nom d'utilisateur '{username}' est déjà utilisé par un autre compte.", "danger")
+        return redirect('/admin/users')
+
+    try:
+        # Si un mot de passe est fourni, le mettre à jour aussi
+        if password and len(password) >= 6:
+            conn.execute("""
+                UPDATE utilisateurs 
+                SET username = ?, password = ?, telephone = ?, adresse = ?, solde_mru = ?, est_admin = ?
+                WHERE id = ?
+            """, (username, password, telephone, adresse, float(solde_mru), est_admin, user_id))
+        else:
+            # Sinon, ne pas toucher au mot de passe
+            conn.execute("""
+                UPDATE utilisateurs 
+                SET username = ?, telephone = ?, adresse = ?, solde_mru = ?, est_admin = ?
+                WHERE id = ?
+            """, (username, telephone, adresse, float(solde_mru), est_admin, user_id))
+
+        conn.commit()
+        flash(f"✅ Utilisateur '{username}' modifié avec succès !", "success")
+    except Exception as e:
+        flash(f"Erreur lors de la modification : {e}", "danger")
+    finally:
+        conn.close()
+
+    return redirect('/admin/users')
+
+
+@app.route('/admin/users/delete', methods=['POST'])
+def admin_delete_user():
+    """Supprimer un utilisateur"""
+    user_id = request.form.get('user_id')
+
+    if not user_id:
+        flash("ID utilisateur manquant.", "danger")
+        return redirect('/admin/users')
+
+    # Empêcher la suppression de son propre compte
+    if int(user_id) == session.get('user_id'):
+        flash("⚠️ Vous ne pouvez pas supprimer votre propre compte.", "danger")
+        return redirect('/admin/users')
+
+    conn = get_db_connection()
+
+    try:
+        # Récupérer le nom avant suppression
+        user = conn.execute("SELECT username FROM utilisateurs WHERE id = ?", (user_id,)).fetchone()
+
+        if user:
+            # Supprimer l'utilisateur
+            conn.execute("DELETE FROM utilisateurs WHERE id = ?", (user_id,))
+            conn.commit()
+            flash(f"✅ Utilisateur '{user['username']}' supprimé avec succès.", "success")
+        else:
+            flash("Utilisateur introuvable.", "danger")
+    except Exception as e:
+        flash(f"Erreur lors de la suppression : {e}", "danger")
+    finally:
+        conn.close()
+
+    return redirect('/admin/users')
 
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0", port=5000)

@@ -20,6 +20,14 @@
                 <span style="background: rgba(255, 255, 255, 0.15); padding: 8px 16px; border-radius: 20px; backdrop-filter: blur(10px);">
                     👤 {{ session.get('username') }}
                 </span>
+
+                <!-- Afficher le lien Admin uniquement si l'utilisateur est admin -->
+                {% if session.get('est_admin') %}
+                    <a href="/admin/users" style="background: var(--gold); color: var(--primary); font-weight: 700;">
+                        👑 Admin Panel
+                    </a>
+                {% endif %}
+
                 <a href="/logout">🚪 Déconnexion</a>
             {% else %}
                 <a href="/login">🔐 Connexion</a>
