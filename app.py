@@ -302,6 +302,39 @@ def logout():
     session.clear()
     return redirect('/login')
 
+
+@app.route('/transfert', methods=['POST'])
+def transfert():
+    if 'user_id' not in session: return redirect('/login')
+
+    destinataire = request.form['destinataire']
+    montant = int(request.form['montant'])
+    sender_id = session['user_id']
+
+    conn = get_db_connection()
+
+    # 1. Vérifier si le destinataire existe
+    user_dest = conn.execute("SELECT id, solde_mru FROM utilisateurs WHERE username = ?", (destinataire,)).fetchone()
+
+    # 2. Vérifier le solde de l'envoyeur
+    user_sender = conn.execute("SELECT solde_mru FROM utilisateurs WHERE id = ?", (sender_id,)).fetchone()
+
+    if user_dest and user_sender and user_sender['solde_mru'] >= montant and montant > 0:
+        # On effectue le transfert
+        # Débiter l'envoyeur
+        conn.execute("UPDATE utilisateurs SET solde_mru = solde_mru - ? WHERE id = ?", (montant, sender_id))
+        # Créditer le destinataire
+        conn.execute("UPDATE utilisateurs SET solde_mru = solde_mru + ? WHERE id = ?", (montant, user_dest['id']))
+
+        conn.commit()
+        flash(f"✅ Transfert réussi ! Vous avez envoyé {montant} MRU à {destinataire}.", "success")
+    else:
+        flash("❌ Échec du transfert : Solde insuffisant ou destinataire introuvable.", "danger")
+
+    conn.close()
+    return redirect('/')
+
+
 @app.route('/admin/delete', methods=['POST'])
 def delete_user():
     # Le serveur vérifie le cookie, mais pas l'origine de la demande
@@ -428,9 +461,7 @@ def admin_edit_user():
 
 @app.route('/admin/users/delete', methods=['POST'])
 def admin_delete_user():
-    """Supprimer un utilisateur"""
     user_id = request.form.get('user_id')
-
     if not user_id:
         flash("ID utilisateur manquant.", "danger")
         return redirect('/admin/users')
@@ -446,7 +477,7 @@ def admin_delete_user():
         # Récupérer le nom avant suppression
         user = conn.execute("SELECT username FROM utilisateurs WHERE id = ?", (user_id,)).fetchone()
 
-        if user:
+        if user and session['est_admin']==True:
             # Supprimer l'utilisateur
             conn.execute("DELETE FROM utilisateurs WHERE id = ?", (user_id,))
             conn.commit()
@@ -461,4 +492,4 @@ def admin_delete_user():
     return redirect('/admin/users')
 
 if __name__ == '__main__':
-    app.run(debug=True,host="0.0.0.0", port=5000)
+    app.run(debug=True,host="0.0.0.0", port=5555)

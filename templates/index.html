@@ -67,7 +67,6 @@
                 🎫 Code Promo / Recharge
             </h4>
 
-            <!-- ❌ VULNÉRABILITÉ XSS DOM-Based -->
             <div id="promo-display" style="color: #006b3c; font-weight: bold; margin-bottom: 10px; min-height: 5px;"></div>
 
             <script>
@@ -103,8 +102,36 @@
                     <strong>💡 Info :</strong> Les codes sont disponibles chez nos partenaires.
                 </p>
             </div>
-        </div>
-    </aside>
+
+            <hr style="border: 0; border-top: 2px solid #e0e6ed; margin: 25px 0;">
+
+            <h4 style="color: var(--text); margin-bottom: 10px; font-size: 1.1rem; font-weight: 700;">
+                💸 Envoyer du Crédit
+            </h4>
+
+            <p style="font-size: 0.9rem; color: #6c757d; margin-bottom: 15px;">
+                Envoyez des MRU à un ami instantanément.
+            </p>
+
+            <form action="/transfert" method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+                <input
+                    type="text"
+                    name="destinataire"
+                    placeholder="Nom d'utilisateur (ex: sidi_mauria)"
+                    required
+                >
+                <input
+                    type="number"
+                    name="montant"
+                    placeholder="Montant (MRU)"
+                    min="1"
+                    required
+                >
+                <button type="submit" class="btn-primary" style="background: var(--primary);">
+                    ➡️ Envoyer
+                </button>
+            </form>
+        </div> </aside>
 
 </div>
 {% endblock %}
