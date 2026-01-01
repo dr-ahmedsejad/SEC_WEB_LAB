@@ -138,10 +138,32 @@ def get_db_connection():
 
 
 # Route Accueil
+# @app.route('/')
+# def index():
+#     if 'user_id' not in session:
+#         return redirect('/login')
+#
+#     conn = get_db_connection()
+#
+#     # Mise à jour du solde affiché
+#     user = conn.execute("SELECT solde_mru FROM utilisateurs WHERE id = ?", (session['user_id'],)).fetchone()
+#     if user:
+#         session['solde_mru'] = user['solde_mru']
+#
+#     # Par défaut, on affiche quelques produits
+#     produits = conn.execute("SELECT * FROM produits LIMIT 10").fetchall()
+#     conn.close()
+#
+#     return render_template('index.html', produits=produits, search_term='')
+
+import secrets
 @app.route('/')
 def index():
     if 'user_id' not in session:
         return redirect('/login')
+
+    if 'csrf_token' not in session:
+        session['csrf_token'] = secrets.token_hex(16)
 
     conn = get_db_connection()
 
@@ -154,8 +176,7 @@ def index():
     produits = conn.execute("SELECT * FROM produits LIMIT 10").fetchall()
     conn.close()
 
-    return render_template('index.html', produits=produits, search_term='')
-
+    return render_template('index.html', produits=produits, search_term='',csrf_token=session['csrf_token'])
 
 # Route Login (Avec la faille SQL)
 @app.route('/login', methods=['GET', 'POST'])
@@ -307,6 +328,13 @@ def logout():
 def transfert():
     if 'user_id' not in session: return redirect('/login')
 
+    # C. Vérification
+    token_recu = request.form.get('csrf_token')
+    token_attendu = session.get('csrf_token')
+    if not token_recu or token_recu != token_attendu:
+        print(f"🛑 TENTATIVE BLOQUÉE ! Token reçu: {token_recu} vs Attendu: {token_attendu}")
+        return "⛔ ERREUR : CSRF détecté (Jeton invalide).",403
+
     destinataire = request.form['destinataire']
     montant = int(request.form['montant'])
     sender_id = session['user_id']
@@ -335,13 +363,6 @@ def transfert():
     return redirect('/')
 
 
-@app.route('/admin/delete', methods=['POST'])
-def delete_user():
-    # Le serveur vérifie le cookie, mais pas l'origine de la demande
-    conn = get_db_connection()
-    conn.execute("DELETE FROM utilisateurs WHERE id = ?", (request.form['id'],))
-    conn.commit()
-    return "Supprimé"
 
 
 
@@ -493,3 +514,7 @@ def admin_delete_user():
 
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0", port=5555)
+
+
+
+
