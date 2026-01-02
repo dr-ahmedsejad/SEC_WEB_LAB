@@ -24,20 +24,22 @@
                 {% for p in produits %}
                 <div class="card" style="position: relative;">
 
-                   <form action="/acheter/{{ p.id }}" method="POST" style="position: absolute; top: 15px; right: 15px; z-index: 10;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <form action="/acheter/{{ p.id }}" method="POST" style="position: absolute; top: 15px; right: 15px; z-index: 10; display: flex; align-items: center; gap: 5px;">
+                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-                        {% if p.quantite > 0 %}
-                            <a href="javascript:void(0);"
-                               onclick="this.closest('form').submit();"
-                               style="text-decoration: none; font-size: 1.5rem; cursor: pointer;"
-                               title="Acheter">
-                               🛒
-                            </a>
-                        {% else %}
-                            <button disabled class="btn btn-secondary btn-sm" style="font-size: 0.7rem;">Rupture</button>
-                        {% endif %}
-                    </form>
+                     {% if p.quantite > 0 %}
+                         <input type="number" name="qty" value="1" style="width: 50px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; padding-left: 5px;">
+
+                         <a href="javascript:void(0);"
+                            onclick="this.closest('form').submit();"
+                            style="text-decoration: none; font-size: 1.5rem; cursor: pointer;"
+                            title="Acheter">
+                            🛒
+                         </a>
+                     {% else %}
+                         <button disabled class="btn btn-secondary btn-sm" style="font-size: 0.7rem;">Rupture</button>
+                     {% endif %}
+                 </form>
 
                     <div>
                         <div style="font-size: 3.5rem; text-align: center; margin-bottom: 15px; filter: grayscale(0.2); transition: all 0.3s ease;">

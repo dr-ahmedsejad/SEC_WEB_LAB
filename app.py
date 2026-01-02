@@ -235,7 +235,8 @@ def transfert():
 @app.route('/acheter/<int:produit_id>', methods=['POST'])
 def acheter_produit(produit_id):
     if 'user_id' not in session: return redirect('/login')
-
+    qty = request.form['qty']
+    print(qty)
     user_id = session['user_id']
     conn = get_db_connection()
 
@@ -243,7 +244,7 @@ def acheter_produit(produit_id):
         # 1. Récupérer les infos du produit et de l'utilisateur
         produit = conn.execute("SELECT * FROM produits WHERE id = ?", (produit_id,)).fetchone()
         user = conn.execute("SELECT * FROM utilisateurs WHERE id = ?", (user_id,)).fetchone()
-
+        prix_achat = float(produit['prix']) * float(qty)
         # 2. Vérifications de base
         if not produit:
             flash("Produit introuvable.", "danger")
@@ -253,22 +254,23 @@ def acheter_produit(produit_id):
             flash("Stock épuisé !", "warning")
             return redirect('/')
 
-        if user['solde_mru'] < produit['prix']:
+        if user['solde_mru'] < prix_achat:
             flash("Solde insuffisant pour cet achat.", "danger")
             return redirect('/')
 
+
         # 3. TRANSACTION D'ACHAT
         # A. Débiter l'utilisateur
-        conn.execute("UPDATE utilisateurs SET solde_mru = solde_mru - ? WHERE id = ?", (produit['prix'], user_id))
+        conn.execute("UPDATE utilisateurs SET solde_mru = solde_mru - ? WHERE id = ?", (prix_achat, user_id))
 
         # B. Baisser le stock
-        conn.execute("UPDATE produits SET quantite = quantite - 1 WHERE id = ?", (produit_id,))
+        conn.execute("UPDATE produits SET quantite =quantite - ? WHERE id = ?", (qty,produit_id,))
 
         # C. Créer la commande (Facture)
         cur = conn.execute("""
             INSERT INTO commandes (utilisateur_id, produit_id, montant, adresse_livraison)
             VALUES (?, ?, ?, ?)
-        """, (user_id, produit_id, produit['prix'], user['adresse']))
+        """, (user_id, produit_id, prix_achat, user['adresse']))
 
         # On récupère l'ID de la commande qu'on vient de créer (ex: 3)
         id_nouvelle_facture = cur.lastrowid
