@@ -66,9 +66,9 @@ def login():
 
     conn = get_db_connection()
 
-    # ❌ VULNÉRABILITÉ A03 (SQL Injection) : Concaténation directe
-    # Payload: admin_baraka' --
+
     query = f"SELECT * FROM utilisateurs WHERE username = '{username}' AND password = '{password}'"
+
 
     try:
         user = conn.execute(query).fetchone()
@@ -239,6 +239,12 @@ def acheter_produit(produit_id):
     print(qty)
     user_id = session['user_id']
     conn = get_db_connection()
+
+    qty = int(request.form['qty'])
+    # Interdiction formelle des nombres négatifs ou nuls
+    if qty <= 0:
+        flash("Erreur : Vous devez commander au moins 1 article.")
+        return redirect(url_for('index'))
 
     try:
         # 1. Récupérer les infos du produit et de l'utilisateur
@@ -538,4 +544,13 @@ def admin_delete_user():
 
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0", port=5555)
+
+import time
+
+# Mémoire cache : { 'IP_DU_PIRATE': [10:05:01, 10:05:02...] }
+login_attempts = {}
+
+
+
+
 
