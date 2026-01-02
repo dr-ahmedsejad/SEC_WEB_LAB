@@ -360,6 +360,7 @@ def voir_commande(id_commande):
         flash("Commande introuvable.", "danger")
         return redirect('/')
 
+
 @app.route('/mes-commandes')
 def mes_commandes():
     if 'user_id' not in session: return redirect('/login')
@@ -433,6 +434,9 @@ def admin_add_user():
             INSERT INTO utilisateurs (username, password, telephone, adresse, solde_mru, est_admin)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (username, password, telephone, adresse, float(solde_mru), est_admin))
+
+
+
 
         conn.commit()
         flash(f"✅ Utilisateur '{username}' créé avec succès !", "success")
@@ -532,7 +536,4 @@ def admin_delete_user():
 
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0", port=5555)
-
-
-
 
