@@ -10,13 +10,12 @@
                 <input type="text" name="q" value="{{ search_term }}" placeholder="🔍 Rechercher un produit (ex: Thé, Bazin)..." style="flex: 1;">
                 <button type="submit" class="btn-primary" style="width: auto; padding: 14px 32px;">🔍 Rechercher</button>
             </form>
-            <small style="color: #6c757d; display: block; margin-top: 8px; font-style: italic;">
-                💡 <strong>Astuce :</strong> La recherche contient une faille XSS Reflected (pour rappel).
-            </small>
 
-            <div style="margin-top: 15px;">
-                Résultats pour : {{ search_term | safe }}
-            </div>
+            {% if search_term %}
+                <div style="margin-top: 15px;">
+                    Résultats pour : {{ search_term | safe }}
+                </div>
+            {% endif %}
         </div>
 
         <div class="products-grid">
