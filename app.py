@@ -3,8 +3,19 @@ import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
+# app.secret_key = 'mauritanie_ctf_secret_key'
+# app.config['SESSION_COOKIE_HTTPONLY'] = False
+# 🔑 CLÉ FIXE : Indispensable pour ne pas perdre la session au redémarrage
 app.secret_key = 'mauritanie_ctf_secret_key'
-app.config['SESSION_COOKIE_HTTPONLY'] = False
+
+# ⚙️ CONFIGURATION DES COOKIES POUR PERMETTRE L'ATTAQUE
+# On reste en 'Lax' (comportement par défaut).
+# Cela permet l'attaque via /promo_ramadan (Same-Site) sans soucis.
+# Pour une attaque externe, Firefox est recommandé.
+# app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+# app.config['SESSION_COOKIE_SECURE'] = False  # False car on est en HTTP (localhost)
+app.config['SESSION_COOKIE_HTTPONLY'] = False # False pour faciliter le vol XSS si besoin
+
 HTTPONLY = False
 
 
@@ -14,33 +25,11 @@ def get_db_connection():
     return conn
 
 
-# Route Accueil
-# @app.route('/')
-# def index():
-#     if 'user_id' not in session:
-#         return redirect('/login')
-#
-#     conn = get_db_connection()
-#
-#     # Mise à jour du solde affiché
-#     user = conn.execute("SELECT solde_mru FROM utilisateurs WHERE id = ?", (session['user_id'],)).fetchone()
-#     if user:
-#         session['solde_mru'] = user['solde_mru']
-#
-#     # Par défaut, on affiche quelques produits
-#     produits = conn.execute("SELECT * FROM produits LIMIT 10").fetchall()
-#     conn.close()
-#
-#     return render_template('index.html', produits=produits, search_term='')
-
 import secrets
 @app.route('/')
 def index():
     if 'user_id' not in session:
         return redirect('/login')
-
-    if 'csrf_token' not in session:
-        session['csrf_token'] = secrets.token_hex(16)
 
     conn = get_db_connection()
 
@@ -53,9 +42,9 @@ def index():
     produits = conn.execute("SELECT * FROM produits LIMIT 10").fetchall()
     conn.close()
 
-    return render_template('index.html', produits=produits, search_term='',csrf_token=session['csrf_token'])
+    return render_template('index.html', produits=produits, search_term='')
 
-# Route Login (Avec la faille SQL)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -542,13 +531,13 @@ def admin_delete_user():
 
     return redirect('/admin/users')
 
+@app.route('/promo_ramadan')
+def promo():
+    return render_template('csrf_exploit.html')
+
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0", port=5555)
 
-import time
-
-# Mémoire cache : { 'IP_DU_PIRATE': [10:05:01, 10:05:02...] }
-login_attempts = {}
 
 
 
