@@ -3,17 +3,32 @@ import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
-# app.secret_key = 'mauritanie_ctf_secret_key'
-# app.config['SESSION_COOKIE_HTTPONLY'] = False
-# 🔑 CLÉ FIXE : Indispensable pour ne pas perdre la session au redémarrage
-app.secret_key = 'mauritanie_ctf_secret_key'
+# "secret" est la valeur la plus utilisée dans les exemples de code sur Internet.
+# Le développeur a oublié de la remplacer par une vraie clé avant la mise en prod
+app.secret_key = 'secret'
+
+import secrets
+import os
+from flask import Flask
+
+app = Flask(__name__)
+
+# ✅ CONFIGURATION SÉCURISÉE
+# Option A : Génération aléatoire (Invalide les sessions à chaque redémarrage)
+# app.secret_key = secrets.token_hex(32)
+
+# Option B (Recommandée) : Chargement depuis une variable d'environnement
+# La vraie clé est stockée dans un fichier .env secret, pas dans le code.
+app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+
+
 
 # ⚙️ CONFIGURATION DES COOKIES POUR PERMETTRE L'ATTAQUE
 # On reste en 'Lax' (comportement par défaut).
 # Cela permet l'attaque via /promo_ramadan (Same-Site) sans soucis.
 # Pour une attaque externe, Firefox est recommandé.
 # app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-# app.config['SESSION_COOKIE_SECURE'] = False  # False car on est en HTTP (localhost)
+app.config['SESSION_COOKIE_SECURE'] = False  # False car on est en HTTP (localhost)
 app.config['SESSION_COOKIE_HTTPONLY'] = False # False pour faciliter le vol XSS si besoin
 
 HTTPONLY = False
@@ -43,6 +58,8 @@ def index():
     conn.close()
 
     return render_template('index.html', produits=produits, search_term='')
+
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -230,10 +247,10 @@ def acheter_produit(produit_id):
     conn = get_db_connection()
 
     qty = int(request.form['qty'])
-    # Interdiction formelle des nombres négatifs ou nuls
-    if qty <= 0:
-        flash("Erreur : Vous devez commander au moins 1 article.")
-        return redirect(url_for('index'))
+    # # Interdiction formelle des nombres négatifs ou nuls
+    # if qty <= 0:
+    #     flash("Erreur : Vous devez commander au moins 1 article.")
+    #     return redirect(url_for('index'))
 
     try:
         # 1. Récupérer les infos du produit et de l'utilisateur
@@ -382,6 +399,149 @@ def mes_commandes():
 
 
 
+#panier
+import json
+import base64
+
+from flask import make_response
+
+
+
+@app.route('/promo')
+def page_promo():
+    if 'user_id' not in session:
+        flash("Veuillez vous connecter pour accéder aux promos.", "warning")
+        return redirect('/login')
+
+    conn = get_db_connection()
+
+    # 1. Récupération des produits
+    produits = conn.execute("SELECT * FROM produits_promo").fetchall()
+
+    # 2. Récupération de l'historique (Preuve d'achat)
+    historique = conn.execute("""
+        SELECT * FROM paiements_promo
+        WHERE user_id = ?
+        ORDER BY date_paiement DESC LIMIT 5
+    """, (session['user_id'],)).fetchall()
+
+    conn.close()
+
+    # 3. Lecture du Panier depuis le Cookie (Vulnérable)
+    cookie_panier = request.cookies.get('panier_promo')
+    panier = []
+    total = 0
+
+    if cookie_panier:
+        try:
+            # A08: Désérialisation sans vérification d'intégrité
+            json_str = base64.b64decode(cookie_panier).decode()
+            panier = json.loads(json_str)
+            total = sum(item['prix'] for item in panier)
+        except:
+            panier = []
+
+    return render_template('promo.html', produits=produits, panier=panier, total=total, historique=historique)
+
+
+
+@app.route('/ajouter_promo/<int:id_produit>')
+def ajouter_promo(id_produit):
+    conn = get_db_connection()
+    produit = conn.execute("SELECT * FROM produits_promo WHERE id = ?", (id_produit,)).fetchone()
+    conn.close()
+
+    if not produit: return "Produit introuvable"
+
+    # Récupération de l'ancien panier
+    cookie_panier = request.cookies.get('panier_promo')
+    panier = []
+    if cookie_panier:
+        try:
+            panier = json.loads(base64.b64decode(cookie_panier).decode())
+        except:
+            pass
+
+    # Ajout du produit AVEC SON PRIX (C'est ici que Mirade va modifier plus tard)
+    panier.append({
+        "id": produit['id'],
+        "nom": produit['nom'],
+        "prix": produit['prix']
+    })
+
+    # Encodage et envoi du cookie
+    nouveau_cookie = base64.b64encode(json.dumps(panier).encode()).decode()
+
+    resp = make_response(redirect('/promo'))
+    resp.set_cookie('panier_promo', nouveau_cookie)
+    return resp
+
+
+@app.route('/payer_promo', methods=['POST'])
+def payer_promo():
+    if 'user_id' not in session: return redirect('/login')
+
+    cookie_panier = request.cookies.get('panier_promo')
+    if not cookie_panier:
+        flash("Votre panier est vide.", "warning")
+        return redirect('/promo')
+
+    try:
+        # 1. Lecture du cookie (Point d'attaque de Mirade)
+        panier = json.loads(base64.b64decode(cookie_panier).decode())
+
+        # ❌ VULNÉRABILITÉ : On croit le prix indiqué dans le cookie
+        montant_total = sum(item['prix'] for item in panier)
+
+        # Snapshot des articles pour la preuve (ex: "iPhone (1 MRU)")
+        details = ", ".join([f"{p['nom']} ({p['prix']} MRU)" for p in panier])
+
+        user_id = session['user_id']
+        conn = get_db_connection()
+
+        # 2. Gestion de la Concurrence (Atomic Update)
+        # On tente de débiter SEULEMENT SI le solde est suffisant.
+        # C'est une opération atomique sûre.
+        cursor = conn.execute("""
+            UPDATE utilisateurs
+            SET solde_mru = solde_mru - ?
+            WHERE id = ? AND solde_mru >= ?
+        """, (montant_total, user_id, montant_total))
+
+        if cursor.rowcount > 0:
+            # Le débit a fonctionné, on enregistre la commande
+            conn.execute("""
+                INSERT INTO paiements_promo (user_id, montant_paye, details_commande)
+                VALUES (?, ?, ?)
+            """, (user_id, montant_total, details))
+
+            conn.commit()
+            flash(f"✅ Paiement validé ! Débit : {montant_total} MRU.", "success")
+
+            # Vider le panier
+            resp = make_response(redirect('/promo'))
+            resp.set_cookie('panier_promo', '', expires=0)
+            conn.close()
+            return resp
+
+        else:
+            # rowcount == 0 signifie solde insuffisant
+            conn.close()
+            flash("❌ Solde insuffisant pour effectuer cet achat.", "danger")
+            return redirect('/promo')
+
+    except Exception as e:
+        return f"Erreur technique : {e}"
+
+
+# Route pour vider le panier manuellement
+@app.route('/vider_panier')
+def vider_panier_route():
+    resp = make_response(redirect('/promo'))
+    resp.set_cookie('panier_promo', '', expires=0)
+    return resp
+
+
 # ============================================
 # CRUD ADMIN - GESTION DES UTILISATEURS
 # ============================================
@@ -493,6 +653,7 @@ def admin_edit_user():
         flash(f"✅ Utilisateur '{username}' modifié avec succès !", "success")
     except Exception as e:
         flash(f"Erreur lors de la modification : {e}", "danger")
+
     finally:
         conn.close()
 
@@ -534,6 +695,9 @@ def admin_delete_user():
 @app.route('/promo_ramadan')
 def promo():
     return render_template('csrf_exploit.html')
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0", port=5555)
